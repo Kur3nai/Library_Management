@@ -15,8 +15,24 @@ public class Member {
         this.borrowedBook = borrowedBook;
     }
 
+    public String getMemberID() {
+        return memberID;
+    }
+
+    public String getMemberName(){
+        return memberName;
+    }
+
+    public String getMemberType(){
+        return "";
+    }
+
     public int getNumberOfBooksBorrowed() {
         return borrowedBook.size();
+    }
+
+    public List<String> getBorrowedBook(){
+        return borrowedBook;
     }
 
     public void addBook(String bookID) {
@@ -39,11 +55,24 @@ public class Member {
         }
     }
 
-    public void borrowedBook() {
+    public String toFileString() {
+        StringBuilder result = new StringBuilder();
 
+        result.append(memberID).append(", ")
+                .append(memberName).append(", ")
+                .append(getMemberType()).append(", ")
+                .append(borrowedBook.size());
+
+        for (String bookCode : borrowedBook) {
+            result.append(", ").append(bookCode);
+        }
+
+        return result.toString();
     }
 
-    public void renewBook(){
-
+    @Override
+    public String toString(){
+        return "MemberID: " + memberID +
+                "\nMember Name: " + memberName;
     }
 }
