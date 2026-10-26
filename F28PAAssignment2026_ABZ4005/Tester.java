@@ -1,5 +1,8 @@
-package F28PAAssignment2026;
-import F28PAAssignment2026.src.*;
+package F28PAAssignment2026_ABZ4005;
+import F28PAAssignment2026_ABZ4005.src.*;
+
+// Adam Zikri Bin Zaini
+// ABZ4005
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -9,15 +12,16 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
-import static F28PAAssignment2026.src.FileUtil.*;
+import static F28PAAssignment2026_ABZ4005.src.FileUtil.*;
 
 public class Tester {
     private static final Scanner user_in = new Scanner(System.in);
     private static Library library;
     private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final String MEMBER_FILE = "F28PAAssignment2026/src/data/member.txt";
-    private static final String BOOK_FILE = "F28PAAssignment2026/src/data/book.txt";
-    private static final String DATA_FILE = "F28PAAssignment2026/src/data/data.txt";
+    private static final String MEMBER_FILE = "F28PAAssignment2026_ABZ4005/src/data/member.txt";
+    private static final String BOOK_FILE = "F28PAAssignment2026_ABZ4005/src/data/book.txt";
+    private static final String DATA_FILE = "F28PAAssignment2026_ABZ4005/src/data/data.txt";
+    private static final String template = "===================================================";
 
     public static void main(String[] args) throws IOException {
         String library_name;
@@ -57,6 +61,7 @@ public class Tester {
                     case 6 -> removeMember();
                     case 7 -> searchBook();
                     case 8 -> selectUser(library_name);
+                    case 9 -> checkAvailableCopies();
                     case 0 -> status = true;
                     default -> System.out.println("Invalid Choice. Please pick a number from menu.");
                 }
@@ -136,6 +141,7 @@ public class Tester {
         System.out.println("6. Remove a Member");
         System.out.println("7. Search Books");
         System.out.println("8. Select User");
+        System.out.println("9. Check Available Copies");
         System.out.println("0. Exit");
         System.out.println("Enter Choice: ");
     }
@@ -161,6 +167,34 @@ public class Tester {
         }
     }
 
+    private static void checkAvailableCopies() {
+        List<String> shown = new ArrayList<>();
+        boolean any = false;
+
+        System.out.println(template);
+
+        for (Book book : library.getBooks()) {
+            String title = book.getTitle();
+
+            if (shown.contains(title.toLowerCase())) {
+                continue; // this title was already printed
+            }
+            shown.add(title.toLowerCase());
+
+            int copies = library.availableCopies(title);
+            if (copies > 0) {
+                System.out.println(title + " - " + copies + " available");
+                any = true;
+            }
+        }
+
+        System.out.println(template);
+
+        if (!any) {
+            System.out.println("No books are currently available.");
+        }
+    }
+
     private static void selectUser(String library_name){
         String member_id = readString("Enter a Member ID: ");
         Member member = library.findMember(member_id);
@@ -182,7 +216,7 @@ public class Tester {
                     case 3 -> renewBook(member);
                     case 4 -> System.out.println(member);
                     case 5 -> showBorrowedBooks(member);
-                    case 6 -> library.getBooks().forEach(System.out::println);
+                    case 6 -> checkAvailableCopies();
                     case 0 -> user_menu_status = true;
                     default -> System.out.println("Invalid choice. Please pick a number from the menu.");
                 }

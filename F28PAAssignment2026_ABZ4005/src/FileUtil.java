@@ -1,4 +1,4 @@
-package F28PAAssignment2026.src;
+package F28PAAssignment2026_ABZ4005.src;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -7,7 +7,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 public class FileUtil {
 
@@ -118,7 +117,6 @@ public class FileUtil {
         try (BufferedWriter writer =
                      Files.newBufferedWriter(Path.of(fileName))) {
 
-            // Write the total number of books if book.txt requires it
             writer.write(String.valueOf(books.size()));
             writer.newLine();
 
