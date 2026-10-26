@@ -6,9 +6,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 
 import static F28PAAssignment2026.src.FileUtil.*;
 
@@ -16,201 +15,92 @@ public class Tester {
     private static final Scanner user_in = new Scanner(System.in);
     private static Library library;
     private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final String MEMBER_FILE = "F28PAAssignment2026/src/data/member.txt";
+    private static final String BOOK_FILE = "F28PAAssignment2026/src/data/book.txt";
+    private static final String DATA_FILE = "F28PAAssignment2026/src/data/data.txt";
 
     public static void main(String[] args) throws IOException {
-        List<Member> members = readMembers("F28PAAssignment2026/src/data/member.txt");
-        List<Book> books = readBooks("F28PAAssignment2026/src/data/book.txt");
-        library = new Library(books, members);
-        String member_id;
-        int user_choice_1;
-        int user_choice_2;
+        String library_name;
+
+        try{
+            List<Member> members = readMembers(MEMBER_FILE);
+            List<Book> books = readBooks(BOOK_FILE);
+            library = new Library(books, members);
+
+            try (BufferedReader br = new BufferedReader(new FileReader(DATA_FILE))){
+                library_name = br.readLine();
+                if(library_name == null || library_name.isBlank()){
+                    library_name = "Library";
+                }
+            }
+        } catch (IOException e){
+            System.out.println("Could not load library data: " + e.getMessage());
+            return;
+        } catch (RuntimeException e){
+            System.out.println("Data files are formatted differently: " + e.getMessage());
+            return;
+        }
+
         boolean status = false;
-        boolean user_status = false;
-        BufferedReader br = new BufferedReader(new FileReader("F28PAAssignment2026/src/data/data.txt"));
-        String library_name = br.readLine();
 
         while (!status) {
-            main_menu(library_name);
-            String selection = user_in.nextLine();
             try{
-                user_choice_1 = Integer.parseInt(selection);
-            } catch (NumberFormatException e){
-                System.out.println("Invalid Input. Please Enter a Number.");
-                continue;
-            }
-            switch (user_choice_1) {
-                case 1 -> {
-                    for (Member member : members) {
-                        System.out.println(member);
-                    }
+                main_menu(library_name);
+                int choice = verifyInput(null);
+
+                switch(choice){
+                    case 1 -> library.getMembers().forEach(System.out::println);
+                    case 2 -> library.getBooks().forEach(System.out::println);
+                    case 3 -> addBook();
+                    case 4 -> removeBook();
+                    case 5 -> addMember();
+                    case 6 -> removeMember();
+                    case 7 -> searchBook();
+                    case 8 -> selectUser(library_name);
+                    case 0 -> status = true;
+                    default -> System.out.println("Invalid Choice. Please pick a number from menu.");
                 }
-                case 2 -> {
-                    for (Book book : books) {
-                        System.out.println(book);
-                    }
-                }
-                case 3 -> addBook();
-                case 4 -> removeBook();
-                case 5 -> addMember();
-                case 6 -> removeMember();
-                case 7 -> searchBook();
-                case 8 -> {
-                    System.out.println("Enter a Member ID: ");
-                    member_id = user_in.next();
-                    boolean found = false;
-                    for (Member member : members) {
-                        if (member.getMemberID().equals(member_id)) {
-                            found = true;
-                            user_status = false;
-                            while (!user_status) {
-                                user_menu(library_name, member.getMemberName());
-                                selection = user_in.nextLine();
-                                try{
-                                    user_choice_2 = Integer.parseInt(selection);
-                                } catch (NumberFormatException e){
-                                    System.out.println("Invalid Input. Please Enter a Number.");
-                                    continue;
-                                }
-                                user_in.nextLine();
-                                switch (user_choice_2) {
-                                    case 1 -> {
-                                        System.out.println("Please Enter Book Code: ");
-                                        String book_code = user_in.nextLine();
-                                        boolean book_found = false;
-
-                                        for (Book book : books){
-                                            if (book.getBookCode().equals(book_code)){
-                                                book_found = true;
-
-                                                if(!book.isAvailable()){
-                                                    System.out.println("This book is not available for borrowing.");
-                                                    break;
-                                                }
-
-                                                if (member.getNumberOfBooksBorrowed() >= 2){
-                                                    System.out.println("Cannot Borrow More than 2 Books at a time.");
-                                                    break;
-                                                }
-
-                                                String dueDate = LocalDate.now().plusDays(30).format(FORMAT);
-                                                book.borrowBook(dueDate);
-                                                member.addBook(book_code);
-                                                break;
-                                            }
-                                        }
-                                        if (!book_found) {
-                                            System.out.println("Book not found.");
-                                        }
-                                    }
-                                    case 2 -> {
-                                        System.out.println("Please Enter Book Code: ");
-                                        String book_code = user_in.nextLine();
-                                        boolean book_found = false;
-
-                                        for (Book book : books){
-                                            if (book.getBookCode().equals(book_code)){
-                                                book_found = true;
-                                                book.returnBook();
-                                                member.returnBook(book_code);
-                                                break;
-                                            }
-                                        }
-
-                                        if (!book_found) {
-                                            System.out.println("Book not found.");
-                                        }
-                                    }
-                                    case 3 -> {
-                                        System.out.println("Please Enter Book Code: ");
-                                        String book_code = user_in.nextLine();
-                                        boolean book_found = false;
-
-                                        for (Book book : books) {
-                                            if (book.getBookCode().equals(book_code)){
-                                                book_found = true;
-
-                                                if (!member.getBorrowedBook().contains(book_code)){
-                                                    System.out.println("You have not borrowed this book.");
-                                                    break;
-                                                }
-
-                                                if (!book.isLoaned()){
-                                                    System.out.println("This book is not currently borrowed");
-                                                    break;
-                                                }
-
-                                                int renewal_limit;
-
-                                                if (member instanceof Student){
-                                                    renewal_limit = 1;
-                                                } else if (member instanceof Staff){
-                                                    renewal_limit = 2;
-                                                } else if (member instanceof Lecturer){
-                                                    renewal_limit = Integer.MAX_VALUE;
-                                                } else {
-                                                    renewal_limit =0;
-                                                }
-
-                                                if (book.getRenewalCount() >= renewal_limit) {
-                                                    System.out.println("You have Reached the Renewal Limit.");
-                                                    break;
-                                                }
-
-                                                try {
-                                                    LocalDate parsedDate = LocalDate.parse(
-                                                            book.getDueDate(), FORMAT
-                                                    );
-
-                                                    String new_due_date = parsedDate
-                                                            .plusDays(30)
-                                                            .format(FORMAT);
-
-                                                    book.renewBook(new_due_date);
-
-                                                } catch (java.time.format.DateTimeParseException e) {
-                                                    System.out.println(
-                                                            "Error: Invalid date format. Cannot renew book."
-                                                    );
-                                                }
-                                                break;
-                                            }
-                                        }
-                                        if (!book_found) {
-                                            System.out.println("Book not found.");
-                                        }
-                                    }
-                                    case 4 -> {
-                                        System.out.println(member);
-                                    }
-                                    case 5 -> {
-                                        for (String book_code : member.getBorrowedBook()){
-                                            for (Book book : library.getBooks()){
-                                                if (book.getBookCode().equals(book_code)){
-                                                    System.out.println(book);
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                    case 0 -> user_status = true;
-                                }
-                            }
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        System.out.println("User Does not exist.");
-                    }
-                }
-                case 0 -> {
-                    status = true;
-                }
+            } catch (NoSuchElementException e){
+                System.out.println("\nInput Closed. Exiting.");
+                status = true;
+            } catch (RuntimeException e){
+                System.out.println("Something went wrong: " + e.getMessage());
             }
         }
-        FileUtil.saveBooks("F28PAAssignment2026/src/data/book.txt", books);
-        FileUtil.saveMembers("F28PAAssignment2026/src/data/member.txt",members);
+
+        FileUtil.saveBooks(BOOK_FILE, library.getBooks());
+        FileUtil.saveMembers(MEMBER_FILE, library.getMembers());
         System.out.println("Library System Shutting Down");
+
+    }
+
+    private static int verifyInput(String prompt){
+        while(true) {
+            if (prompt != null) System.out.println(prompt);
+            String line = user_in.nextLine().trim();
+            try{
+                return Integer.parseInt(line);
+            } catch (NumberFormatException e){
+                System.out.println("Invalid input. Please Enter a Number.");
+            }
+        }
+    }
+
+    private static int verifyInput(String prompt, int min, int max) {
+        while (true) {
+            int value = verifyInput(prompt);
+            if (value >= min && value <= max) return value;
+            System.out.printf("Please enter a number between %d and %d.%n", min, max);
+        }
+    }
+
+    private static String readString(String prompt) {
+        while (true) {
+            System.out.println(prompt);
+            String line = user_in.nextLine().trim();
+            if (!line.isEmpty()) return line;
+            System.out.println("Input cannot be empty.");
+        }
     }
 
     static void banner(String library_name) {
@@ -229,6 +119,7 @@ public class Tester {
         System.out.println("3. Renew Book");
         System.out.println("4. Check Member Details");
         System.out.println("5. Check Borrow Books");
+        System.out.println("6. Display Books");
         System.out.println("0. Exit");
         System.out.println("Enter Choice: ");
     }
@@ -254,10 +145,14 @@ public class Tester {
         boolean found = false;
 
         for (Book book : library.getBooks()){
-            String reminder = book.reminderMsg(today);
-            if (reminder != null){
-                System.out.println(reminder);
-                found=true;
+            try {
+                String reminder = book.reminderMsg(today);
+                if (reminder != null){
+                    System.out.println(reminder);
+                    found=true;
+                }
+            } catch (RuntimeException e){
+                System.out.println("Could not check reminder for book " + book.getBookCode());
             }
         }
 
@@ -266,30 +161,155 @@ public class Tester {
         }
     }
 
+    private static void selectUser(String library_name){
+        String member_id = readString("Enter a Member ID: ");
+        Member member = library.findMember(member_id);
+
+        if (member == null) {
+            System.out.println("User Does not exist.");
+            return;
+        }
+
+        boolean user_menu_status = false;
+        while (!user_menu_status) {
+            try {
+                user_menu(library_name, member.getMemberName());
+                int choice = verifyInput(null);
+
+                switch (choice) {
+                    case 1 -> borrowBook(member);
+                    case 2 -> returnBook(member);
+                    case 3 -> renewBook(member);
+                    case 4 -> System.out.println(member);
+                    case 5 -> showBorrowedBooks(member);
+                    case 6 -> library.getBooks().forEach(System.out::println);
+                    case 0 -> user_menu_status = true;
+                    default -> System.out.println("Invalid choice. Please pick a number from the menu.");
+                }
+            } catch (NoSuchElementException e) {
+                throw e;
+            } catch (RuntimeException e) {
+                System.out.println("Something went wrong: " + e.getMessage());
+            }
+        }
+    }
+
+    private static void borrowBook(Member member) {
+        String book_code = readString("Please Enter Book Code: ");
+        Book book = library.findBook(book_code);
+
+        if (book == null) {
+            System.out.println("Book not found.");
+            return;
+        }
+        if (!book.isAvailable()) {
+            System.out.println("This book is not available for borrowing.");
+            return;
+        }
+        if (member.getNumberOfBooksBorrowed() >= 2) {
+            System.out.println("Cannot Borrow More than 2 Books at a time.");
+            return;
+        }
+
+        String dueDate = LocalDate.now().plusDays(30).format(FORMAT);
+        book.borrowBook(dueDate);
+        member.addBook(book_code);
+        System.out.println("Book borrowed successfully. Due date: " + dueDate);
+    }
+
+    private static void returnBook(Member member) {
+        String book_code = readString("Please Enter Book Code: ");
+        Book book = library.findBook(book_code);
+
+        if (book == null) {
+            System.out.println("Book not found.");
+            return;
+        }
+        if (!member.getBorrowedBook().contains(book_code)) {
+            System.out.println("You have not borrowed this book.");
+            return;
+        }
+
+        book.returnBook();
+        member.returnBook(book_code);
+        System.out.println("Book returned successfully.");
+    }
+
+    private static void renewBook(Member member) {
+        String book_code = readString("Please Enter Book Code: ");
+        Book book = library.findBook(book_code);
+
+        if (book == null) {
+            System.out.println("Book not found.");
+            return;
+        }
+        if (!member.getBorrowedBook().contains(book_code)) {
+            System.out.println("You have not borrowed this book.");
+            return;
+        }
+        if (!book.isLoaned()) {
+            System.out.println("This book is not currently borrowed");
+            return;
+        }
+
+        int renewal_limit;
+        if (member instanceof Student) {
+            renewal_limit = 1;
+        } else if (member instanceof Staff) {
+            renewal_limit = 2;
+        } else if (member instanceof Lecturer) {
+            renewal_limit = Integer.MAX_VALUE;
+        } else {
+            renewal_limit = 0;
+        }
+
+        if (book.getRenewalCount() >= renewal_limit) {
+            System.out.println("You have Reached the Renewal Limit.");
+            return;
+        }
+
+        try {
+            LocalDate parsedDate = LocalDate.parse(book.getDueDate(), FORMAT);
+            String new_due_date = parsedDate.plusDays(30).format(FORMAT);
+            book.renewBook(new_due_date);
+            System.out.println("Book renewed. New due date: " + new_due_date);
+        } catch (DateTimeParseException | NullPointerException e) {
+            System.out.println("Error: Invalid date format. Cannot renew book.");
+        }
+    }
+
+    private static void showBorrowedBooks(Member member) {
+        List<Book> borrowed = library.getBorrowedBooks(member);
+        if (member.getBorrowedBook().isEmpty()) {
+            System.out.println("You have not borrowed any books.");
+            return;
+        }
+        borrowed.forEach(System.out::println);
+    }
+
+
+
     private static void addBook() {
-        System.out.println("Book type (N/R): ");
-        String book_type = user_in.nextLine().trim();
+        String book_type;
+        while (true) {
+            book_type = readString("Book type (N/R): ").toUpperCase();
+            if (book_type.equals("N") || book_type.equals("R")) break;
+            System.out.println("Book type must be N or R.");
+        }
 
-        System.out.println("Book Title: ");
-        String title = user_in.nextLine().trim();
-
-        System.out.println("Number of Authors: ");
-        int count = Integer.parseInt(user_in.nextLine().trim());
+        String title = readString("Book Title: ");
+        int count = verifyInput("Number of Authors: ", 1, 20);
 
         List<String> authors = new ArrayList<>();
-
-        for (int i = 1; i <= count; i++){
-            System.out.printf("\nAuthor %d : ", i);
-            authors.add(user_in.nextLine().trim());
+        for (int i = 1; i <= count; i++) {
+            authors.add(readString("Author " + i + " : "));
         }
-        System.out.println("Published Year: ");
-        int published_year = Integer.parseInt(user_in.nextLine().trim());
 
-        System.out.println("Publisher : ");
-        String publisher = user_in.nextLine().trim();
+        int currentYear = LocalDate.now().getYear();
+        int published_year = verifyInput("Published Year: ", 1000, currentYear);
 
-        System.out.println("Book Code: ");
-        String book_code = user_in.nextLine().trim();
+        String publisher = readString("Publisher : ");
+        String book_code = readString("Book Code: ");
 
         if (library.findBook(book_code) != null) {
             System.out.println("A Book with that call number already exists.");
@@ -297,7 +317,7 @@ public class Tester {
         }
 
         Book book = new Book(
-                book_type, title, count, authors, published_year, publisher, book_code, false,null
+                book_type, title, count, authors, published_year, publisher, book_code, false, null
         );
 
         library.getBooks().add(book);
@@ -305,9 +325,7 @@ public class Tester {
     }
 
     private static void removeBook() {
-        System.out.println("Enter a Book Code: ");
-        String book_code = user_in.nextLine().trim();
-
+        String book_code = readString("Enter a Book Code: ");
         Book book = library.findBook(book_code);
 
         if (book == null){
@@ -322,36 +340,23 @@ public class Tester {
     }
 
     private static void addMember() {
-        System.out.println("Member ID: ");
-        String member_id = user_in.nextLine().trim();
+        String member_id = readString("Member ID: ");
 
         if (library.findMember(member_id) != null){
             System.out.println("Member ID already exist");
             return;
         }
 
-        System.out.println("Member Name: ");
-        String member_name = user_in.nextLine().trim();
-
-        System.out.println("Member type (S = Staff, L = Lecturer, s = Students): ");
-        String member_type = user_in.nextLine().trim();
+        String member_name = readString("Member Name: ");
+        String member_type = readString("Member type (S = Staff, L = Lecturer, s = Students): ");
 
         List<String> books_borrowed = new ArrayList<>();
         Member member;
 
         switch (member_type){
-            case "S" -> {
-                member = new Staff(member_id,member_name, books_borrowed);
-                break;
-            }
-            case "L" -> {
-                member = new Lecturer(member_id, member_name, books_borrowed);
-                break;
-            }
-            case "s" -> {
-                member = new Student(member_id, member_name, books_borrowed);
-                break;
-            }
+            case "S" -> member = new Staff(member_id,member_name, books_borrowed);
+            case "L" -> member = new Lecturer(member_id, member_name, books_borrowed);
+            case "s" -> member = new Student(member_id, member_name, books_borrowed);
             default -> {
                 System.out.println("Invalid member type.");
                 return;
@@ -363,9 +368,7 @@ public class Tester {
     }
 
     private static void removeMember() {
-        System.out.println("Enter Member ID that you wish to delete: ");
-        String member_id = user_in.nextLine().trim();
-
+        String member_id = readString("Enter Member ID that you wish to delete: ");
         Member member = library.findMember(member_id);
 
         if (member == null){
@@ -384,15 +387,13 @@ public class Tester {
         System.out.println("2. Author");
         System.out.println("3. Publication Year Range");
         System.out.println("4. Exit");
-        System.out.println("Enter Choice: ");
-        int choice = user_in.nextInt();
+
+        int choice = verifyInput("Enter Choice: ");
         boolean found = false;
-        user_in.nextLine();
 
         switch (choice){
             case 1 -> {
-                System.out.println("Enter title or keyword: ");
-                String book_title = user_in.nextLine().toLowerCase().trim();
+                String book_title = readString("Enter title or keyword: ".toLowerCase());
 
                 for (Book book : library.getBooks()){
                     if (book.getTitle().toLowerCase().contains(book_title)){
@@ -400,28 +401,24 @@ public class Tester {
                         found = true;
                     }
                 }
-                break;
             }
             case 2 -> {
-                System.out.println("Enter Author: ");
-                String book_author = user_in.nextLine().toLowerCase().trim();
+                String book_author = readString("Enter Author: ").toLowerCase();
 
-                for (Book book : library.getBooks()){
-                    for (String name : book.getAuthors()){
-                        if (name.toLowerCase().contains(book_author)){
+                for (Book book : library.getBooks()) {
+                    for (String name : book.getAuthors()) {
+
+                        if (name.toLowerCase().contains(book_author)) {
                             System.out.println(book);
                             found = true;
                             break;
                         }
                     }
                 }
-                break;
             }
             case 3 -> {
-                System.out.println("Enter Starting Year (format - yyyy): ");
-                int starting_year = Integer.parseInt(user_in.nextLine().trim());
-                System.out.println("Enter Ending Year (format - yyyy): ");
-                int ending_year = Integer.parseInt(user_in.nextLine().trim());
+                int starting_year = verifyInput("Enter Starting Year (format - yyyy): ");
+                int ending_year = verifyInput("Enter Ending Year (format - yyyy): ");
 
                 if (starting_year > ending_year){
                     System.out.println("Invalid Year Range.");
@@ -436,13 +433,8 @@ public class Tester {
                         found = true;
                     }
                 }
-                break;
             }
             case 4 -> {
-                break;
-            }
-            default -> {
-                System.out.println("Invalid Search Choice.");
                 return;
             }
         }

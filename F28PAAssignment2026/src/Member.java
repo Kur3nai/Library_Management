@@ -18,19 +18,15 @@ public class Member {
     public String getMemberID() {
         return memberID;
     }
-
     public String getMemberName(){
         return memberName;
     }
-
     public String getMemberType(){
         return "";
     }
-
     public int getNumberOfBooksBorrowed() {
         return borrowedBook.size();
     }
-
     public List<String> getBorrowedBook(){
         return borrowedBook;
     }

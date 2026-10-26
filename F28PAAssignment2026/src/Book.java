@@ -1,5 +1,6 @@
 package F28PAAssignment2026.src;
 
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -106,24 +107,28 @@ public class Book {
             return null;
         }
 
-        LocalDate due = LocalDate.parse(dueDate, FORMAT);
-        long daysUntilDue = ChronoUnit.DAYS.between(today,due);
-
-        if (daysUntilDue == 7) {
-            return "Reminder: " + title
-                    + " is due in one week.";
-        } else if (daysUntilDue == 0){
-            return "Due Today: " + title
-                    + ". Please Return It Today.";
-        } else if (daysUntilDue < 0){
-            long daysLate = -daysUntilDue;
-            double fine = daysLate * 1.0;
-
-            return "OVERDUE: " + title + " is "
-                    + daysLate + " days late. Fine: RM "
-                    + String.format("%.2f", fine);
+        LocalDate due;
+        try {
+            due = LocalDate.parse(dueDate, FORMAT);
+        } catch (DateTimeParseException e) {
+            return null;
         }
 
+        long daysUntilDue = ChronoUnit.DAYS.between(today,due);
+
+        if (daysUntilDue < 0) {
+            long daysLate = -daysUntilDue;
+            double fine = daysLate * 1.0;
+            return "OVERDUE: " + title + " is "
+                    + daysLate + (daysLate == 1 ? " day" : " days")
+                    + " late. Fine: RM " + String.format("%.2f", fine);
+
+        } else if (daysUntilDue == 0) {
+            return "Due Today: " + title + ". Please Return It Today.";
+        } else if (daysUntilDue <= 7) {
+            return "Reminder: " + title + " is due in "
+                    + daysUntilDue + (daysUntilDue == 1 ? " day" : " days") + ".";
+        }
 
         return null;
     }

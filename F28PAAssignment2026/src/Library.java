@@ -45,16 +45,6 @@ public class Library {
         return borrowedBooks;
     }
 
-    public int availableCopies(String title){
-        int count = 0;
-        for (Book book : books){
-            if (book.getTitle().equalsIgnoreCase(title) && book.isAvailable()){
-                count++;
-            }
-        }
-        return count;
-    }
-
     public List<Book> getBooks(){
         return books;
     }
