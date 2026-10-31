@@ -191,15 +191,16 @@ public class Tester {
 
         for (Book book : library.getBooks()) {
             String title = book.getTitle();
+            String book_code = book.getBookCode();
 
             if (shown.contains(title.toLowerCase())) {
-                continue; // this title was already printed
+                continue;
             }
             shown.add(title.toLowerCase());
 
             int copies = library.availableCopies(title);
             if (copies > 0) {
-                System.out.println(title + " - " + copies + " available");
+                System.out.println(title + " - " + book_code + " - " + copies + " available");
                 any = true;
             }
         }
@@ -230,7 +231,10 @@ public class Tester {
                     case 1 -> borrowBook(member);
                     case 2 -> returnBook(member);
                     case 3 -> renewBook(member);
-                    case 4 -> System.out.println(member);
+                    case 4 -> {
+                        System.out.println("\n------------------------------------------------------");
+                        System.out.println(member);
+                    }
                     case 5 -> showBorrowedBooks(member);
                     case 6 -> checkAvailableCopies();
                     case 0 -> user_menu_status = true;
@@ -330,14 +334,20 @@ public class Tester {
 
     private static void showBorrowedBooks(Member member) {
         List<Book> borrowed = library.getBorrowedBooks(member);
+        System.out.println();
+
+        int counter = 1;
         if (member.getBorrowedBook().isEmpty()) {
             System.out.println("You have not borrowed any books.");
             return;
         }
-        borrowed.forEach(System.out::println);
+
+        System.out.println("Books Borrowed: ");
+        for (Book book : borrowed){
+            System.out.println(counter + ". " + book.getTitle() + " - " + book.getBookCode() + " - Return by: " + book.getDueDate());
+            counter++;
+        }
     }
-
-
 
     private static void addBook() {
         String book_type;
