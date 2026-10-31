@@ -53,8 +53,24 @@ public class Tester {
                 int choice = verifyInput(null);
 
                 switch(choice){
-                    case 1 -> library.getMembers().forEach(System.out::println);
-                    case 2 -> library.getBooks().forEach(System.out::println);
+                    case 1 -> {
+                        System.out.println();
+                        System.out.println("Members Lists: ");
+                        int number = 1;
+                        for (Member member : library.getMembers()){
+                            System.out.println(number+ ". " + member.getMemberName() + " - " + member.getMemberType() + " - " + member.getMemberID());
+                            number++;
+                        }
+                    }
+                    case 2 -> {
+                        System.out.println();
+                        System.out.println("Book Lists: ");
+                        int number = 1;
+                        for (Book book : library.getBooks()){
+                            System.out.println(number+ ". " + book.getTitle() + " - " + book.getBookCode() + " - " + book.getPublishedYear());
+                            number++;
+                        }
+                    }
                     case 3 -> addBook();
                     case 4 -> removeBook();
                     case 5 -> addMember();
@@ -476,5 +492,4 @@ public class Tester {
             System.out.println("No Matching books found");
         }
     }
-
 }
